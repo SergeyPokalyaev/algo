@@ -1,5 +1,5 @@
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.function.Consumer;
 
 /**
  * Created by Sergej.Pokalyaev on 03.03.2015.
@@ -8,9 +8,16 @@ public class Board {
 
     private int[][] blocks;
     private int moveTimes;
+    private int parentDirection;
 
     public Board(int[][] blocks) {
+        this.blocks = copyArray(blocks);
+    }
+
+    private Board(int[][] blocks, int moveTimes, int parentDirection) {
         this.blocks = blocks;
+        this.moveTimes = moveTimes;
+        this.parentDirection = parentDirection;
     }
 
     public int dimension() {
@@ -21,26 +28,28 @@ public class Board {
         int hammingWeight = 0;
         for (int i = 0; i < blocks.length; i++) {
             for (int j = 0; j < blocks.length; j++) {
-                if (i == blocks.length - 1 && j == blocks.length - 1) {
-                    if (blocks[i][j] != 0) {
-                        hammingWeight++;
-                    }
+                if (blocks[i][j] == 0) {
                 } else if (blocks[i][j] != i * blocks.length + j + 1) {
                     hammingWeight++;
                 }
             }
         }
-        return hammingWeight + moveTimes;
+        moveTimes++;
+        return hammingWeight;
     }
 
     public int manhattan() {
         int manhattanWeight = 0;
         for (int i = 0; i < blocks.length; i++) {
             for (int j = 0; j < blocks.length; j++) {
-                manhattanWeight += manhattanDistance(i, j);
+                if (blocks[i][j] == 0) {
+                } else if (blocks[i][j] != i * blocks.length + j + 1) {
+                    manhattanWeight += manhattanDistance(i, j);
+                }
             }
         }
-        return manhattanWeight + moveTimes;
+        moveTimes++;
+        return manhattanWeight;
     }
 
     private int manhattanDistance(int i, int j) {
@@ -63,7 +72,7 @@ public class Board {
     public boolean isGoal() {
         for (int i = 0; i < blocks.length; i++) {
             for (int j = 0; j < blocks.length; j++) {
-                if (blocks[i][j] != i * blocks.length + j + 1) {
+                if (!(i == blocks.length - 1 && j == blocks.length - 1) && (blocks[i][j] != i * blocks.length + j + 1 || blocks[i][j] == 0)) {
                     return false;
                 }
             }
@@ -72,21 +81,12 @@ public class Board {
     }
 
     public Board twin() {
-        int[][] blocksExt = new int[blocks.length][blocks.length];
-        for (int i = 0; i < blocks.length; i++) {
-            for (int j = 0; j < blocks.length; j++) {
-                blocksExt[i][j] = blocks[i][j];
-            }
-        }
+        int[][] blocksExt = copyArray(blocks);
 
         if (blocksExt[0][0] == 0 || blocksExt[0][1] == 0) {
-            int matrixValue = blocksExt[1][1];
-            blocksExt[1][1] = blocksExt[1][0];
-            blocksExt[1][0] = matrixValue;
+            swapElementsInBlock(blocksExt, 1, 1, 1, 0);
         } else {
-            int matrixValue = blocksExt[0][1];
-            blocksExt[0][1] = blocksExt[0][0];
-            blocksExt[0][0] = matrixValue;
+            swapElementsInBlock(blocksExt, 0, 1, 0, 0);
         }
 
         return new Board(blocksExt);
@@ -94,13 +94,13 @@ public class Board {
 
     public boolean equals(Object that) {
 
-        if (!(that instanceof Board) && ((Board)that).blocks.length != this.blocks.length) {
+        if (!(that instanceof Board && ((Board) that).blocks.length == this.blocks.length && ((Board) that).blocks[0].length == this.blocks[0].length)) {
             return false;
         }
 
         for (int i = 0; i < this.blocks.length; i++) {
             for (int j = 0; j < this.blocks.length; j++) {
-                if (this.blocks[i][j] != ((Board)that).blocks[i][j]) {
+                if (this.blocks[i][j] != ((Board) that).blocks[i][j]) {
                     return false;
                 }
             }
@@ -113,8 +113,8 @@ public class Board {
 
         Bag<Board> boardBag = new Bag<Board>();
 
-        int zeroPositionI;
-        int zeroPositionJ;
+        int zeroPositionI = 0;
+        int zeroPositionJ = 0;
 
         for (int i = 0; i < blocks.length; i++) {
             for (int j = 0; j < blocks.length; j++) {
@@ -125,25 +125,32 @@ public class Board {
             }
         }
 
-        for (int i = 0; i < 4; i++) {
-            if () {
-
+        if (zeroPositionI != 0) {
+            if (parentDirection != 2) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI - 1, zeroPositionJ, zeroPositionI, zeroPositionJ), moveTimes + 1, 8)); // 8
             }
 
         }
 
+        if (zeroPositionI != blocks.length - 1) {
+            if (parentDirection != 8) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ, zeroPositionI + 1, zeroPositionJ), moveTimes + 1, 2)); // 2
+            }
+        }
+
+        if (zeroPositionJ != 0) {
+            if (parentDirection != 6) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ - 1, zeroPositionI, zeroPositionJ), moveTimes + 1, 4)); // 4
+            }
+        }
+        if (zeroPositionJ != blocks.length - 1) {
+            if (parentDirection != 4) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ, zeroPositionI, zeroPositionJ + 1), moveTimes + 1, 6)); // 6
+            }
+        }
+
         return boardBag;
     }
-
-    private Board swapElementsInBlock() {
-
-
-
-        return null;
-
-    }
-
-
 
 
     public String toString() {
@@ -151,29 +158,72 @@ public class Board {
         sb.append(blocks.length + "\n");
 
         for (int i = 0; i < blocks.length; i++) {
+            sb.append(" ");
             for (int j = 0; j < blocks.length; j++) {
-                sb.append(blocks[i][j] + " ");
+                sb.append(blocks[i][j] + "  ");
             }
             sb.append("\n");
         }
 
-        sb.append(moveTimes + "\n");
+        //sb.append(moveTimes + "\n");
         return sb.toString();
     }
 
     public static void main(String[] args) {
 
-        int[][] blocks = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
+        int[][] blocks = {{1, 2, 3}, {4, 5, 6}, {7, 0, 8}};
+        Board b = new Board(blocks);
+        System.out.println(b.isGoal());
+        /*
+        int[][] blocks = {{1, 2}, {3, 0}};
+        Board b = new Board(blocks);
+        System.out.println(b.isGoal());
+        */
+        /*
+        int[][] blocks = {{5, 8, 7}, {1, 4, 6}, {3, 0, 2}};
         Board b = new Board(blocks);
 
-        Board b1 = new Board(blocks);
-
-        System.out.println(b.equals(b1));
 
         System.out.println(b.hamming());
-        System.out.println(b.manhattan());
+        System.out.println(b);
+
+        System.out.println(b.equals(b));
+        */
+        /*
+        System.out.println(b.hamming());
+
+        for (Board board : b.neighbors()) {
+            System.out.println(board);
+            System.out.println(board.manhattan());
+        }
+
+        System.out.println("----------------------");
 
 
+        Iterator<Board> b1 = b.neighbors().iterator();
+
+
+        for (Board board : b1.next().neighbors()) {
+            System.out.println(board);
+            System.out.println(board.manhattan());
+        }
+        */
+    }
+
+    private int[][] swapElementsInBlock(int[][] blocks, int i1, int j1, int i2, int j2) {
+        int matrixValue = blocks[i1][j1];
+        blocks[i1][j1] = blocks[i2][j2];
+        blocks[i2][j2] = matrixValue;
+        return blocks;
+    }
+
+    private int[][] copyArray(int[][] blocks) {
+        int[][] blocksExt = new int[blocks.length][blocks.length];
+
+        for (int i = 0; i < blocks.length; i++) {
+            blocksExt[i] = Arrays.copyOf(blocks[i], blocks.length);
+        }
+        return blocksExt;
     }
 
 }

@@ -6,56 +6,59 @@ import java.util.Iterator;
  */
 public class Solver {
 
-    private Stack<Board1> stack;
+    private Stack<Board> stack;
     private boolean solvable;
+    private int moves;
 
-    public Solver(Board1 initial) {
+    public Solver(Board initial) {
 
-        Comparator<Board1> comparator = new Comparator<Board1>() {
+        Comparator<Board> comparator = new Comparator<Board>() {
             @Override
-            public int compare(Board1 board1, Board1 board2) {
-                return board1.hamming() > board2.hamming() ? 1 : -1;
-                //return board1.manhattan() > board2.manhattan() ? 1 : -1;
+            public int compare(Board Board, Board Board2) {
+                return Board.hamming() + moves > Board2.hamming() + moves ? 1 : -1;
+                //return Board.manhattan() > Board2.manhattan() ? 1 : -1;
             }
         };
 
-        MinPQ<Board1> minPQ = new MinPQ<Board1>(comparator);
-        MinPQ<Board1> minPQT = new MinPQ<Board1>(comparator);
+        MinPQ<Board> minPQ = new MinPQ<Board>(comparator);
+        MinPQ<Board> minPQT = new MinPQ<Board>(comparator);
 
-        stack = new Stack<Board1>();
+        stack = new Stack<Board>();
 
         minPQ.insert(initial);
         minPQT.insert(initial.twin());
 
-        Board1 board1;
-        Board1 board1T;
-        Iterator<Board1> iterator;
-        Iterator<Board1> iteratorT;
+        Board Board;
+        Board BoardT;
+        Iterator<Board> iterator;
+        Iterator<Board> iteratorT;
 
         for (;;) {
-            board1 = minPQ.delMin();
-            board1T = minPQT.delMin();
+            Board = minPQ.delMin();
+            BoardT = minPQT.delMin();
 
-            stack.push(board1);
+            stack.push(Board);
 
-            System.out.println(board1);
-            System.out.println(board1T);
+            System.out.println(Board);
+            System.out.println(BoardT);
 
-            if (board1.isGoal()){
+            if (Board.isGoal()){
                 solvable = true;
                 break;
             }
 
-            if (board1T.isGoal()) {
+            if (BoardT.isGoal()) {
                 break;
             }
 
-            iterator = board1.neighbors().iterator();
+            iterator = Board.neighbors().iterator();
+            moves++;
+
             while (iterator.hasNext()) {
                 minPQ.insert(iterator.next());
             }
 
-            iteratorT = board1T.neighbors().iterator();
+            iteratorT = BoardT.neighbors().iterator();
             while (iteratorT.hasNext()) {
                 minPQT.insert(iteratorT.next());
             }
@@ -70,17 +73,17 @@ public class Solver {
         return stack.size();
     }
 
-    public Iterable<Board1> solution() {
+    public Iterable<Board> solution() {
         return stack;
     }
 
 
     public static void main(String[] args) {
         //int[][] block = {{0, 1, 3}, {4, 2, 5}, {7, 8, 6}};
-        int[][] block = {{1, 2, 3}, {4, 5, 6}, {8, 7, 0}};
+        int[][] block = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
 
-        Solver solver = new Solver(new Board1(block));
-        System.out.println(solver.isSolvable());
+        Solver solver = new Solver(new Board(block));
+        //System.out.println(solver.isSolvable());
 
 
     }
