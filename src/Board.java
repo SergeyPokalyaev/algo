@@ -1,3 +1,14 @@
+import java.util.*;
+
+/**
+ *
+ */
+
+/**
+ * @author adrian
+ *
+ */
+
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -5,225 +16,184 @@ import java.util.Iterator;
  * Created by Sergej.Pokalyaev on 03.03.2015.
  */
 public class Board {
+    private int[][] b;
+    private int N;
 
-    private int[][] blocks;
-    private int moveTimes;
-    private int parentDirection;
-
-    public Board(int[][] blocks) {
-        this.blocks = copyArray(blocks);
+    public Board(int[][] blocks) // construct a board from an N-by-N array of
+    // blocks
+    // (where blocks[i][j] = block in row i, column
+    // j)
+    {
+        this.b = blocks;
+        this.N = blocks.length;
     }
 
-    private Board(int[][] blocks, int moveTimes, int parentDirection) {
-        this.blocks = blocks;
-        this.moveTimes = moveTimes;
-        this.parentDirection = parentDirection;
+    public int dimension() // board dimension N
+    {
+        return N;
     }
 
-    public int dimension() {
-        return blocks.length;
+    public int hamming() // number of blocks out of place
+    {
+        int h = 0, c = 1;
+        for (int x = 0; x < N; x++)
+            for (int y = 0; y < N; y++)
+                if (c++ != b[x][y])
+                    h++;
+        return h - 1;
     }
 
-    public int hamming() {
-        int hammingWeight = 0;
-        for (int i = 0; i < blocks.length; i++) {
-            for (int j = 0; j < blocks.length; j++) {
-                if (blocks[i][j] == 0) {
-                } else if (blocks[i][j] != i * blocks.length + j + 1) {
-                    hammingWeight++;
+    public int manhattan() // sum of Manhattan distances between blocks and goal
+    {
+        int h = 0, c = 1;
+        for (int x = 0; x < N; x++)
+            for (int y = 0; y < N; y++)
+                if (c++ != b[x][y]) {
+                    for (int p = 0; p < N; p++)
+                        for (int r = 0; r < N; r++)
+                            if ((c - 1) == b[p][r]) {
+                                h += Math.abs(x - p) + Math.abs(y - r);
+                            }
+                    if (c == N * N)
+                        break;
                 }
-            }
-        }
-        moveTimes++;
-        return hammingWeight;
+        return h;
     }
 
-    public int manhattan() {
-        int manhattanWeight = 0;
-        for (int i = 0; i < blocks.length; i++) {
-            for (int j = 0; j < blocks.length; j++) {
-                if (blocks[i][j] == 0) {
-                } else if (blocks[i][j] != i * blocks.length + j + 1) {
-                    manhattanWeight += manhattanDistance(i, j);
-                }
-            }
-        }
-        moveTimes++;
-        return manhattanWeight;
+    public boolean isGoal() // is this board the goal board?
+    {
+        return this.hamming() == 0;
     }
 
-    private int manhattanDistance(int i, int j) {
-
-        int iNorm;
-        int jNorm;
-
-        if (blocks[i][j] == 0) {
-            iNorm = blocks.length - 1;
-            jNorm = iNorm;
-        } else {
-            iNorm = (blocks[i][j] - 1) / blocks.length;
-            jNorm = (blocks[i][j] - 1) % blocks.length;
-        }
-
-        return Math.abs(iNorm - i) + Math.abs(jNorm - j);
-    }
-
-
-    public boolean isGoal() {
-        for (int i = 0; i < blocks.length; i++) {
-            for (int j = 0; j < blocks.length; j++) {
-                if (!(i == blocks.length - 1 && j == blocks.length - 1) && (blocks[i][j] != i * blocks.length + j + 1 || blocks[i][j] == 0)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
+    // a board obtained by exchanging two adjacent blocks in the same row
     public Board twin() {
-        int[][] blocksExt = copyArray(blocks);
+        int y, x1, x2;
 
-        if (blocksExt[0][0] == 0 || blocksExt[0][1] == 0) {
-            swapElementsInBlock(blocksExt, 1, 1, 1, 0);
-        } else {
-            swapElementsInBlock(blocksExt, 0, 1, 0, 0);
-        }
+        int[][] n = new int[N][N];
 
-        return new Board(blocksExt);
+        y = StdRandom.uniform(N);
+        x1 = StdRandom.uniform(N);
+        if (x1 == 0)
+            x1 += 1;
+        x1 %= N;
+
+        x2 = x1 + 1;
+        if (x2 == 0)
+            x2 += 1;
+        x2 %= N;
+
+        for (int r = 0; r < N; r++)
+            for (int c = 0; c < N; c++)
+                n[r][c] = b[r][c];
+
+        int t = n[y][x1];
+        n[y][x1] = n[y][x2];
+        n[y][x2] = t;
+
+        return new Board(n);
     }
 
-    public boolean equals(Object that) {
-
-        if (!(that instanceof Board && ((Board) that).blocks.length == this.blocks.length && ((Board) that).blocks[0].length == this.blocks[0].length)) {
+    public boolean equals(Object x) // does this board equal y?
+    {
+        if (x == this)
+            return true;
+        if (x == null)
             return false;
-        }
+        if (x.getClass() != this.getClass())
+            return false;
 
-        for (int i = 0; i < this.blocks.length; i++) {
-            for (int j = 0; j < this.blocks.length; j++) {
-                if (this.blocks[i][j] != ((Board) that).blocks[i][j]) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        Board n = (Board) x;
+        if (n.toString().equals(this.toString()))
+            return true;
+        else
+            return false;
     }
 
-    public Iterable<Board> neighbors() {
-
-        Bag<Board> boardBag = new Bag<Board>();
-
-        int zeroPositionI = 0;
-        int zeroPositionJ = 0;
-
-        for (int i = 0; i < blocks.length; i++) {
-            for (int j = 0; j < blocks.length; j++) {
-                if (blocks[i][j] == 0) {
-                    zeroPositionI = i;
-                    zeroPositionJ = j;
-                }
-            }
-        }
-
-        if (zeroPositionI != 0) {
-            if (parentDirection != 2) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI - 1, zeroPositionJ, zeroPositionI, zeroPositionJ), moveTimes + 1, 8)); // 8
-            }
-
-        }
-
-        if (zeroPositionI != blocks.length - 1) {
-            if (parentDirection != 8) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ, zeroPositionI + 1, zeroPositionJ), moveTimes + 1, 2)); // 2
-            }
-        }
-
-        if (zeroPositionJ != 0) {
-            if (parentDirection != 6) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ - 1, zeroPositionI, zeroPositionJ), moveTimes + 1, 4)); // 4
-            }
-        }
-        if (zeroPositionJ != blocks.length - 1) {
-            if (parentDirection != 4) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ, zeroPositionI, zeroPositionJ + 1), moveTimes + 1, 6)); // 6
-            }
-        }
-
-        return boardBag;
+    public Iterable<Board> neighbors() // all neighboring boards
+    {
+        return new Neighbors();
     }
-
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(blocks.length + "\n");
-
-        for (int i = 0; i < blocks.length; i++) {
-            sb.append(" ");
-            for (int j = 0; j < blocks.length; j++) {
-                sb.append(blocks[i][j] + "  ");
+        StringBuilder s = new StringBuilder();
+        s.append(N + "\n");
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                s.append(String.format("%2d ", b[i][j]));
             }
-            sb.append("\n");
+            s.append("\n");
         }
-
-        //sb.append(moveTimes + "\n");
-        return sb.toString();
+        return s.toString();
     }
 
-    public static void main(String[] args) {
-
-        int[][] blocks = {{1, 2, 3}, {4, 5, 6}, {7, 0, 8}};
-        Board b = new Board(blocks);
-        System.out.println(b.isGoal());
-        /*
-        int[][] blocks = {{1, 2}, {3, 0}};
-        Board b = new Board(blocks);
-        System.out.println(b.isGoal());
-        */
-        /*
-        int[][] blocks = {{5, 8, 7}, {1, 4, 6}, {3, 0, 2}};
-        Board b = new Board(blocks);
-
-
-        System.out.println(b.hamming());
-        System.out.println(b);
-
-        System.out.println(b.equals(b));
-        */
-        /*
-        System.out.println(b.hamming());
-
-        for (Board board : b.neighbors()) {
-            System.out.println(board);
-            System.out.println(board.manhattan());
+    private class Neighbors implements Iterable<Board>{
+        @Override
+        public Iterator<Board> iterator() {
+            return new NeighborIterator();
         }
-
-        System.out.println("----------------------");
-
-
-        Iterator<Board> b1 = b.neighbors().iterator();
-
-
-        for (Board board : b1.next().neighbors()) {
-            System.out.println(board);
-            System.out.println(board.manhattan());
-        }
-        */
     }
 
-    private int[][] swapElementsInBlock(int[][] blocks, int i1, int j1, int i2, int j2) {
-        int matrixValue = blocks[i1][j1];
-        blocks[i1][j1] = blocks[i2][j2];
-        blocks[i2][j2] = matrixValue;
-        return blocks;
-    }
+    private class NeighborIterator implements Iterator<Board>{
+        private ArrayList<Board> neighbors;
+        private int p;
 
-    private int[][] copyArray(int[][] blocks) {
-        int[][] blocksExt = new int[blocks.length][blocks.length];
+        public NeighborIterator(){
+            neighbors = new ArrayList<Board>();
+            p = 0;
 
-        for (int i = 0; i < blocks.length; i++) {
-            blocksExt[i] = Arrays.copyOf(blocks[i], blocks.length);
+            for(int x=0; x<N; x++)
+                for(int y=0; y<N; y++)
+                    if(b[x][y] == 0){
+                        if(x-1 >= 0){
+                            int[][] newarr = cloneArray(b);
+                            exch(newarr,x,y,x-1,y);
+                            neighbors.add(new Board(newarr));
+                        }
+                        if(x+1 < N){
+                            int[][] newarr = cloneArray(b);
+                            exch(newarr,x,y,x+1,y);
+                            neighbors.add(new Board(newarr));
+                        }
+                        if(y-1 >= 0){
+                            int[][] newarr = cloneArray(b);
+                            exch(newarr,x,y-1,x,y);
+                            neighbors.add(new Board(newarr));
+                        }
+                        if(y+1 < N){
+                            int[][] newarr = cloneArray(b);
+                            exch(newarr,x,y+1,x,y);
+                            neighbors.add(new Board(newarr));
+                        }
+                        return;
+                    }
         }
-        return blocksExt;
+
+        private void exch(int[][] arr, int x, int y, int i, int j){
+            int t = arr[x][y];
+            arr[x][y] = arr[i][j];
+            arr[i][j] = t;
+        }
+        private int[][] cloneArray(int[][] arr){
+            int[][] narr = new int[arr.length][arr.length];
+            for (int i = 0; i < arr.length; i++) {
+                for (int j = 0; j < arr.length; j++) {
+                    narr[i][j] = arr[i][j];
+                }
+            }
+            return narr;
+        }
+
+        public boolean hasNext() {
+            return p < neighbors.size();
+        }
+
+        public Board next() {
+            return neighbors.get(p++);
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
     }
 
 }
