@@ -1,90 +1,138 @@
-import java.util.Comparator;
-import java.util.Iterator;
+import java.util.Stack;
 
 /**
- * Created by Сергей on 14.12.13.
+ * @author adrian
+ *
  */
 public class Solver {
-
-    private Queue<Board> queue;
-    private boolean solvable;
+    private Stack<Board> gameTree;
     private int moves;
+    private boolean solvable;
 
+    // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
+        MinPQ<SearchNode> pq = new MinPQ<SearchNode>();
+        gameTree = new Stack<Board>();
+        moves = 0;
+        solvable = false;
+        SearchNode sn;
 
-        Comparator<Board> comparator = new Comparator<Board>() {
-            @Override
-            public int compare(Board Board, Board Board2) {
-                return Board.hamming() + moves > Board2.hamming() + moves ? 1 : -1;
-                //return Board.manhattan() > Board2.manhattan() ? 1 : -1;
-            }
-        };
+        pq.insert(new SearchNode(initial, moves, null));
+        pq.insert(new SearchNode(initial.twin(), moves, null));
+        moves++;
+        // System.out.println(sn);
 
-        MinPQ<Board> minPQ = new MinPQ<Board>(comparator);
-        MinPQ<Board> minPQT = new MinPQ<Board>(comparator);
+        while (true) {
+            SearchNode searchNode = pq.delMin();
+            gameTree.add(searchNode.board());
+//      System.out.println("--vvv--");
+//      System.out.println(searchNode);
+//      System.out.println("--^^^--");
 
-        queue = new Queue<Board>();
-
-        minPQ.insert(initial);
-        minPQT.insert(initial.twin());
-
-        Board Board;
-        Board BoardT;
-        Iterator<Board> iterator;
-        Iterator<Board> iteratorT;
-
-        for (;;) {
-            Board = minPQ.delMin();
-            BoardT = minPQT.delMin();
-
-            queue.enqueue(Board);
-
-            System.out.println(Board);
-            System.out.println(BoardT);
-
-            if (Board.isGoal()){
+            if (searchNode.board().hamming() == 0) {
+                moves = searchNode.moves();
+                // TODO detect if twin or real node...
                 solvable = true;
                 break;
             }
-
-            if (BoardT.isGoal()) {
-                break;
+            for (Board b : searchNode.board().neighbors()) {
+                if(searchNode.parent() == null || !b.equals(searchNode.parent().board())){
+                    pq.insert(new SearchNode(b, moves, searchNode));
+                }
             }
-
-            iterator = Board.neighbors().iterator();
             moves++;
-
-            while (iterator.hasNext()) {
-                minPQ.insert(iterator.next());
-            }
-
-            iteratorT = BoardT.neighbors().iterator();
-            while (iteratorT.hasNext()) {
-                minPQT.insert(iteratorT.next());
-            }
         }
+
     }
 
+    // is the initial board solvable?
     public boolean isSolvable() {
         return solvable;
     }
 
+    // min number of moves to solve initial board; -1 if no solution
     public int moves() {
         return moves;
     }
 
+    // sequence of boards in a shortest solution; null if no solution
     public Iterable<Board> solution() {
-        return queue;
+        return gameTree;
     }
 
-
+    // solve a slider puzzle (given below)
     public static void main(String[] args) {
-        //int[][] block = {{0, 1, 3}, {4, 2, 5}, {7, 8, 6}};
-        int[][] block = {{1, 2, 3}, {0, 7, 6}, {5, 4, 8}};
+        // create initial board from file
 
-        Solver solver = new Solver(new Board(block));
-        System.out.println(solver.moves());
+        In in = new In(args[0]);
+        int N = in.readInt();
+        int[][] blocks = new int[N][N];
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+                blocks[i][j] = in.readInt();
 
+       //int[][] blocks = {{2, 3, 5}, {1, 0, 4}, {7, 8, 6}};
 
+        Board initial = new Board(blocks);
+
+        // solve the puzzle
+        Solver solver = new Solver(initial);
+
+        // print solution to standard output
+        if (!solver.isSolvable())
+            StdOut.println("No solution possible");
+        else {
+            StdOut.println("Minimum number of moves = " + solver.moves());
+            for (Board board : solver.solution())
+                StdOut.println(board);
+        }
+    }
+
+    private class SearchNode implements Comparable<SearchNode> {
+        private Board board;
+        private int moves;
+        private SearchNode parent;
+
+        public SearchNode(Board board, int moves, SearchNode parent) {
+            this.board = board;
+            this.moves = moves;
+            this.parent = parent;
+        }
+
+        public int priority() {
+            return board.manhattan()*2 + moves;
+        }
+
+        public Board board() {
+            return this.board;
+        }
+
+        public int moves() {
+            return this.moves;
+        }
+
+        public SearchNode parent() {
+            return this.parent;
+        }
+
+        @Override
+        public int compareTo(SearchNode sn) {
+            if (this.priority() > sn.priority())
+                return 1;
+            else if (this.priority() < sn.priority())
+                return -1;
+            else
+                return 0;
+        }
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Move: " + this.moves);
+            sb.append("\npriority = " + this.priority());
+            sb.append("\nmanhattan = " + this.board.manhattan());
+            sb.append("\nhamming = " + this.board.hamming());
+            sb.append("\n" + this.board.toString());
+            return sb.toString();
+        }
     }
 }
