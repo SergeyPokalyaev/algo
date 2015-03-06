@@ -66,14 +66,7 @@ public class Board {
 
 
     public boolean isGoal() {
-        for (int i = 0; i < blocks.length; i++) {
-            for (int j = 0; j < blocks.length; j++) {
-                if (!(i == blocks.length - 1 && j == blocks.length - 1) && (blocks[i][j] != i * blocks.length + j + 1 || blocks[i][j] == 0)) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return this.hamming() == 0;
     }
 
     public Board twin() {
