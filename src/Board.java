@@ -7,16 +7,14 @@ import java.util.Iterator;
 public class Board {
 
     private int[][] blocks;
-    private int moveTimes;
     private int parentDirection;
 
     public Board(int[][] blocks) {
         this.blocks = copyArray(blocks);
     }
 
-    private Board(int[][] blocks, int moveTimes, int parentDirection) {
+    private Board(int[][] blocks, int parentDirection) {
         this.blocks = blocks;
-        this.moveTimes = moveTimes;
         this.parentDirection = parentDirection;
     }
 
@@ -34,7 +32,6 @@ public class Board {
                 }
             }
         }
-        moveTimes++;
         return hammingWeight;
     }
 
@@ -48,7 +45,6 @@ public class Board {
                 }
             }
         }
-        moveTimes++;
         return manhattanWeight;
     }
 
@@ -125,28 +121,29 @@ public class Board {
             }
         }
 
-        if (zeroPositionI != 0) {
-            if (parentDirection != 2) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI - 1, zeroPositionJ, zeroPositionI, zeroPositionJ), moveTimes + 1, 8)); // 8
-            }
-
-        }
-
-        if (zeroPositionI != blocks.length - 1) {
-            if (parentDirection != 8) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ, zeroPositionI + 1, zeroPositionJ), moveTimes + 1, 2)); // 2
+        if (zeroPositionJ != blocks.length - 1) {
+            if (parentDirection != 4) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ + 1, zeroPositionI, zeroPositionJ), 6)); // 6
             }
         }
 
         if (zeroPositionJ != 0) {
             if (parentDirection != 6) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ - 1, zeroPositionI, zeroPositionJ), moveTimes + 1, 4)); // 4
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ - 1, zeroPositionI, zeroPositionJ), 4)); // 4
             }
         }
-        if (zeroPositionJ != blocks.length - 1) {
-            if (parentDirection != 4) {
-                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI, zeroPositionJ, zeroPositionI, zeroPositionJ + 1), moveTimes + 1, 6)); // 6
+
+        if (zeroPositionI != blocks.length - 1) {
+            if (parentDirection != 8) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI + 1, zeroPositionJ, zeroPositionI, zeroPositionJ), 2)); // 2
             }
+        }
+
+        if (zeroPositionI != 0) {
+            if (parentDirection != 2) {
+                boardBag.add(new Board(swapElementsInBlock(copyArray(blocks), zeroPositionI - 1, zeroPositionJ, zeroPositionI, zeroPositionJ), 8)); // 8
+            }
+
         }
 
         return boardBag;
@@ -164,8 +161,6 @@ public class Board {
             }
             sb.append("\n");
         }
-
-        //sb.append(moveTimes + "\n");
         return sb.toString();
     }
 
