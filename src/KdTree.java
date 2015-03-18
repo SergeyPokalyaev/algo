@@ -1,6 +1,4 @@
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
-import java.util.ArrayList;
 
 /**
  * Created by Сергей on 28.01.14.
@@ -8,28 +6,33 @@ import java.util.ArrayList;
 public class KdTree {
 
     private Node rootNode;
-
-    public KdTree() {
-    }
+    private int size;
 
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     public int size() {
-        return 0;
+        return size;
     }
 
     public void insert(Point2D p) {
 
         if (rootNode == null) {
+            size++;
             rootNode = new Node(p, Boolean.TRUE, null);
         } else {
 
             Handler handler = new Handler() {
                 @Override
                 public Node handle(Point2D point, boolean even, Node parent) {
-                    return new Node(point, even, parent);
+
+                    if (point.equals(parent.point)) {
+                        return null;
+                    } else {
+                        size++;
+                        return new Node(point, even, parent);
+                    }
                 }
 
                 //Mock method to prevent make syntactic sugar
@@ -44,8 +47,33 @@ public class KdTree {
 
     }
 
-    public boolean contains(Point2D p) {
-        return false;
+    public boolean contains(Point2D point) {
+        return deep(rootNode, point);
+    }
+
+    private static boolean deep(Node node, Point2D point) {
+
+        if (node == null) {
+            return false;
+        }
+
+        if (point.equals(node.point)) {
+            return true;
+        }
+
+        if (node.even) {
+            if (node.point.x() > point.x()) {
+                return deep(node.leftNode, point);
+            } else {
+                return deep(node.rightNode, point);
+            }
+        } else {
+            if (node.point.y() > point.y()) {
+                return deep(node.leftNode, point);
+            } else {
+                return deep(node.rightNode, point);
+            }
+        }
     }
 
     public void draw() {
@@ -68,8 +96,7 @@ public class KdTree {
             @Override
             public Node handle(Point2D point, boolean even, Node node) {
                 nearestNode = length(point, node.point) > length(point, node.parentNode.point) ? node.parentNode : node;
-                new ArrayList();
-                return  null;
+                    return  null;
             }
 
             @Override
@@ -172,20 +199,20 @@ public class KdTree {
             if (node.point.x() > rect.xmin() && node.point.x() < rect.xmax()) {
                 deep(node.leftNode, pointSet, rect);
                 deep(node.rightNode, pointSet, rect);
-            } else if (node.point.x() > rect.xmax() || node.point.x() == rect.xmax() && node.point.x() > rect.xmin()) {
+            } else if (node.point.x() >= rect.xmax()) {
                 deep(node.leftNode, pointSet, rect);
-            } else if (node.point.x() > rect.xmin() || node.point.x() == rect.xmin() && node.point.x() > rect.xmax()) {
+            } else if (node.point.x() <= rect.xmin()) {
                 deep(node.rightNode, pointSet, rect);
             }
 
         } else {
 
-            if (node.point.y() > rect.ymin() && node.point.y() < rect.ymax()) {
+            if (node.point.y() >= rect.ymin() && node.point.y() <= rect.ymax()) {
                 deep(node.leftNode, pointSet, rect);
                 deep(node.rightNode, pointSet, rect);
-            } else if (node.point.y() > rect.ymax() || node.point.y() == rect.ymax() && node.point.y() > rect.ymin()) {
+            } else if (node.point.y() >= rect.ymax()) {
                 deep(node.leftNode, pointSet, rect);
-            } else if (node.point.y() > rect.ymin() || node.point.y() == rect.ymin() && node.point.y() > rect.ymax()) {
+            } else if (node.point.y() <= rect.ymin()) {
                 deep(node.rightNode, pointSet, rect);
             }
         }
@@ -200,9 +227,6 @@ public class KdTree {
         private Node parentNode;
         private Point2D point;
         private boolean even;
-
-        public Node() {
-        }
 
         public Node(Point2D point, boolean even, Node parent) {
             this.parentNode = parent;
@@ -277,20 +301,14 @@ public class KdTree {
         KdTree tree = new KdTree();
 
         tree.insert(new Point2D(0.7, 0.2));
+        tree.insert(new Point2D(0.7, 0.2));
+
         tree.insert(new Point2D(0.5, 0.4));
         tree.insert(new Point2D(0.2, 0.3));
         tree.insert(new Point2D(0.4, 0.7));
         //tree.insert(new Point2D(0.9, 0.6));
         tree.insert(new Point2D(0.8, 0.9));
-
-        /*
-        tree.insert(new Point2D(0.3, 0.8));
-        tree.insert(new Point2D(0.1, 0.9));
-        tree.insert(new Point2D(0.1, 0.7));
-        */
-
-
-
+        tree.insert(new Point2D(0.8, 0.9));
         System.out.println();
 
         Iterable<Point2D> it = tree.range(new RectHV(0, 0, 0.4, 0.4));

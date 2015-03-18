@@ -43,6 +43,10 @@ public class PointSET {
     }
 
     public Point2D nearest(Point2D p) {
+        if (pointSet.isEmpty()) {
+            return null;
+        }
+
         Point2D result = pointSet.max();
 
         for (Point2D point : pointSet) {
