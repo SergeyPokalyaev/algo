@@ -196,7 +196,7 @@ public class KdTree {
 
         if (node.even) {
 
-            if (node.point.x() > rect.xmin() && node.point.x() < rect.xmax()) {
+            if (node.point.x() >= rect.xmin() && node.point.x() <= rect.xmax()) {
                 deep(node.leftNode, pointSet, rect);
                 deep(node.rightNode, pointSet, rect);
             } else if (node.point.x() >= rect.xmax()) {
@@ -308,10 +308,12 @@ public class KdTree {
         tree.insert(new Point2D(0.4, 0.7));
         //tree.insert(new Point2D(0.9, 0.6));
         tree.insert(new Point2D(0.8, 0.9));
-        tree.insert(new Point2D(0.8, 0.9));
+        tree.insert(new Point2D(0.0, 0.1));
         System.out.println();
 
-        Iterable<Point2D> it = tree.range(new RectHV(0, 0, 0.4, 0.4));
+        Iterable<Point2D> it = tree.range(new RectHV(0, 0, 0.0, 0.1));
+
+        System.out.println(it);
 
         tree.nearest(new Point2D(0.6, 0.9));
 

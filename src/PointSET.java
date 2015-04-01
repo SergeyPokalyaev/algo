@@ -63,6 +63,7 @@ public class PointSET {
 
 
     public static void main(String[] args) {
+        /*
         System.out.println("Hello world!!!");
 
         Point2D p1 = new Point2D(2, 2);
@@ -96,6 +97,9 @@ public class PointSET {
 
 
         System.out.println(pointSET.nearest(new Point2D(0, 0)));
+        */
+
+        System.out.println("123456789".substring(1));
 
     }
 
