@@ -13,6 +13,21 @@ public class SAP {
     }
 
     private int[] bfsForFind(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null) {
+            throw new NullPointerException();
+        }
+
+        for (Integer i : v) {
+            if (i < 0 || i >= G.V()) {
+                throw new IndexOutOfBoundsException();
+            }
+        }
+        for (Integer i : w) {
+            if (i < 0 || i >= G.V()) {
+                throw new IndexOutOfBoundsException();
+            }
+        }
+
         BreadthFirstDirectedPaths bfdpV = new BreadthFirstDirectedPaths(G, v);
         boolean[] marked = new boolean[G.V()];
         int[] distTo = new int[G.V()];

@@ -68,7 +68,6 @@ public class WordNet {
     }
 
     public static void main(String[] args) {
-
         WordNet wn = new WordNet(args[0], args[1]);
         System.out.println(wn.distance("plasma_protein", "globulin"));
         System.out.println(wn.sap("plasma_protein", "globulin"));
