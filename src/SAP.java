@@ -28,35 +28,68 @@ public class SAP {
             }
         }
 
-        BreadthFirstDirectedPaths bfdpV = new BreadthFirstDirectedPaths(G, v);
-        boolean[] marked = new boolean[G.V()];
-        int[] distTo = new int[G.V()];
-        int[] edgeTo = new int[G.V()];
-        for (int verLocal = 0; verLocal < G.V(); verLocal++)
-            distTo[verLocal] = Integer.MAX_VALUE;
 
-        Queue<Integer> q = new Queue<Integer>();
-        for (int s : w) {
-            marked[s] = true;
-            distTo[s] = 0;
-            q.enqueue(s);
+        boolean[] markedV = new boolean[G.V()];
+        boolean[] markedW = new boolean[G.V()];
+        int[] sizeToV = new int[G.V()];
+        int[] sizeToW = new int[G.V()];
+
+
+        Queue<Integer> qV = new Queue<Integer>();
+        Queue<Integer> qW = new Queue<Integer>();
+
+        Stack<Integer> sV = new Stack<Integer>();
+        Stack<Integer> sW = new Stack<Integer>();
+
+        for (int s : v) {
+            markedV[s] = true;
+            sV.push(s);
+            qV.enqueue(s);
         }
-        while (!q.isEmpty()) {
-            int ver = q.dequeue();
-            for (int verLocal : G.adj(ver)) {
-                if (!marked[verLocal]) {
-                    edgeTo[verLocal] = ver;
-                    distTo[verLocal] = distTo[ver] + 1;
-                    marked[verLocal] = true;
-                    if (bfdpV.hasPathTo(verLocal)) {
-                        return new int[]{verLocal, distTo[verLocal] + bfdpV.distTo(verLocal)};
-                    }
-                    q.enqueue(verLocal);
+        for (int s : w) {
+            markedW[s] = true;
+            sW.push(s);
+            qW.enqueue(s);
+        }
+
+        int dist = 0;
+        while (!qV.isEmpty() || !qW.isEmpty()) {
+
+            for (Integer i : sV) {
+                if (sW.contains(i)) {
+                    return new int[]{i, sizeToV[i] + sizeToW[i]};
                 }
             }
+
+            dist++;
+            if (!qV.isEmpty()) {
+                int ver = qV.dequeue();
+                for (int verLocal : G.adj(ver)) {
+                    if (!markedV[verLocal]) {
+                        markedV[verLocal] = true;
+                        sizeToV[verLocal] = dist;
+                        sV.push(verLocal);
+                        qV.enqueue(verLocal);
+                    }
+                }
+            }
+
+            if (!qW.isEmpty()) {
+                int ver = qW.dequeue();
+                for (int verLocal : G.adj(ver)) {
+                    if (!markedW[verLocal]) {
+                        markedW[verLocal] = true;
+                        sizeToW[verLocal] = dist;
+                        sW.push(verLocal);
+                        qW.enqueue(verLocal);
+                    }
+                }
+            }
+
         }
         return null;
     }
+
 
     public int length(int v, int w) {
         Stack<Integer> vst = new Stack<Integer>();
@@ -87,6 +120,13 @@ public class SAP {
     }
 
     public static void main(String[] args) {
+
+        In in = new In(args[0]);
+        Digraph G = new Digraph(in);
+        SAP sap = new SAP(G);
+
+        System.out.println(sap.ancestor(7, 11));
+        System.out.println(sap.length(7, 11));
 
     }
 }
