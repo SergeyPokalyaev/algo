@@ -36,16 +36,19 @@ public class WordNet {
         }
         G = new Digraph(size);
         try {
-            BufferedReader in = new BufferedReader
-                    (new FileReader(hypernyms));
+            BufferedReader in = new BufferedReader(new FileReader(hypernyms));
             String str;
             while ((str = in.readLine()) != null) {
                 String[] hnyms = str.split(",");
                 for (int i = 1; i < hnyms.length; i++) {
-                    G.addEdge(Integer.parseInt(hnyms[i]), Integer.parseInt(hnyms[0]));
+                    G.addEdge(Integer.parseInt(hnyms[0]), Integer.parseInt(hnyms[i]));
                 }
             }
         } catch (IOException e) {
+        }
+        DirectedCycle directedCycle = new DirectedCycle(G);
+        if (directedCycle.hasCycle()) {
+            throw new IllegalArgumentException();
         }
     }
 
@@ -54,23 +57,43 @@ public class WordNet {
     }
 
     public boolean isNoun(String word) {
+        if (word == null) {
+            throw new NullPointerException();
+        }
         return container.containsKey(word);
     }
 
+    private void validateNoun(String noun) {
+        if (!isNoun(noun)) {
+            throw new IllegalArgumentException();
+        }
+        if (noun == null) {
+            throw new NullPointerException();
+        }
+    }
+
     public int distance(String nounA, String nounB) {
+        validateNoun(nounA);
+        validateNoun(nounB);
         SAP sap = new SAP(G);
         return sap.length(container.get(nounA), container.get(nounB));
     }
 
     public String sap(String nounA, String nounB) {
+        validateNoun(nounA);
+        validateNoun(nounB);
         SAP sap = new SAP(G);
-        return containerB.get(sap.ancestor(container.get(nounA), container.get(nounB))).iterator().next();
+        String retunStirng = "";
+        for (String str : containerB.get(sap.ancestor(container.get(nounA), container.get(nounB)))) {
+            retunStirng += str + " ";
+        }
+        return retunStirng.substring(0, retunStirng.length() - 1);
     }
 
     public static void main(String[] args) {
         WordNet wn = new WordNet(args[0], args[1]);
-        System.out.println(wn.distance("plasma_protein", "globulin"));
-        System.out.println(wn.sap("plasma_protein", "globulin"));
+        System.out.println(wn.distance("immune_globulin", "immunoglobulin"));
+        System.out.println(wn.sap("immune_globulin", "immunoglobulin"));
 
     }
 }

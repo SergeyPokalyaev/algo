@@ -9,7 +9,12 @@ public class SAP {
     private Digraph G;
 
     public SAP(Digraph G) {
-        this.G = G;
+        this.G = new Digraph(G.V());
+        for (int i = 0; i < G.V(); i++) {
+            for (int adjVer : G.adj(i)) {
+                this.G.addEdge(i, adjVer);
+            }
+        }
     }
 
     private int[] bfsForFind(Iterable<Integer> v, Iterable<Integer> w) {
