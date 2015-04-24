@@ -61,6 +61,12 @@ public class SAP {
                 }
             }
 
+            for (Integer i : sW) {
+                if (sV.contains(i)) {
+                    return new int[]{i, sizeToV[i] + sizeToW[i]};
+                }
+            }
+
             dist++;
             if (!qV.isEmpty()) {
                 int ver = qV.dequeue();
@@ -125,8 +131,10 @@ public class SAP {
         Digraph G = new Digraph(in);
         SAP sap = new SAP(G);
 
-        System.out.println(sap.ancestor(7, 11));
-        System.out.println(sap.length(7, 11));
+        System.out.println(sap.ancestor(14, 7));
+        System.out.println(sap.length(14, 7));
+
+        System.out.println(G);
 
     }
 }
