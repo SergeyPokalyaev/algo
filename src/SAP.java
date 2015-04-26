@@ -9,12 +9,7 @@ public class SAP {
     private Digraph G;
 
     public SAP(Digraph G) {
-        this.G = new Digraph(G.V());
-        for (int i = 0; i < G.V(); i++) {
-            for (int adjVer : G.adj(i)) {
-                this.G.addEdge(i, adjVer);
-            }
-        }
+        this.G = G;
     }
 
     private int[] bfsForFind(Iterable<Integer> v, Iterable<Integer> w) {
@@ -34,6 +29,8 @@ public class SAP {
         }
 
 
+        boolean[] markedV = new boolean[G.V()];
+        boolean[] markedW = new boolean[G.V()];
         int[] sizeToV = new int[G.V()];
         int[] sizeToW = new int[G.V()];
 
@@ -44,20 +41,13 @@ public class SAP {
         Stack<Integer> sV = new Stack<Integer>();
         Stack<Integer> sW = new Stack<Integer>();
 
-
-        for (int i = 0; i < G.V(); i++) {
-            sizeToV[i] = -1;
-            sizeToW[i] = -1;
-        }
-
-
         for (int s : v) {
-            sizeToV[s] = 0;
+            markedV[s] = true;
             sV.push(s);
             qV.enqueue(s);
         }
         for (int s : w) {
-            sizeToW[s] = 0;
+            markedW[s] = true;
             sW.push(s);
             qW.enqueue(s);
         }
@@ -65,46 +55,37 @@ public class SAP {
         int dist = 0;
         while (!qV.isEmpty() || !qW.isEmpty()) {
 
+            for (Integer i : sV) {
+                if (sW.contains(i)) {
+                    return new int[]{i, sizeToV[i] + sizeToW[i]};
+                }
+            }
+
             dist++;
             if (!qV.isEmpty()) {
-                Queue<Integer> qLocal = new Queue<Integer>();
-                for (int ver : qV) {
-                    for (int verLocal : G.adj(ver)) {
-                        if (sizeToV[verLocal] == -1) {
-                            sizeToV[verLocal] = dist;
-                            sV.push(verLocal);
-                            qLocal.enqueue(verLocal);
-                        }
+                int ver = qV.dequeue();
+                for (int verLocal : G.adj(ver)) {
+                    if (!markedV[verLocal]) {
+                        markedV[verLocal] = true;
+                        sizeToV[verLocal] = dist;
+                        sV.push(verLocal);
+                        qV.enqueue(verLocal);
                     }
                 }
-                qV = qLocal;
             }
 
             if (!qW.isEmpty()) {
-                Queue<Integer> qLocal = new Queue<Integer>();
-                for (int ver : qW) {
-                    for (int verLocal : G.adj(ver)) {
-                        if (sizeToW[verLocal] == -1) {
-                            sizeToW[verLocal] = dist;
-                            sW.push(verLocal);
-                            qLocal.enqueue(verLocal);
-                        }
+                int ver = qW.dequeue();
+                for (int verLocal : G.adj(ver)) {
+                    if (!markedW[verLocal]) {
+                        markedW[verLocal] = true;
+                        sizeToW[verLocal] = dist;
+                        sW.push(verLocal);
+                        qW.enqueue(verLocal);
                     }
                 }
-                qW = qLocal;
             }
 
-
-
-        }
-        int[] result = new int[]{0, Integer.MAX_VALUE};
-        for (Integer i : sV) {
-            if (sW.contains(i) && result[1] > sizeToV[i] + sizeToW[i]) {
-                result = new int[]{i, sizeToV[i] + sizeToW[i]};
-            }
-        }
-        if (result[1] != Integer.MAX_VALUE) {
-            return result;
         }
         return null;
     }
@@ -144,9 +125,8 @@ public class SAP {
         Digraph G = new Digraph(in);
         SAP sap = new SAP(G);
 
-        //System.out.println(G);
-        System.out.println(sap.ancestor(6, 9));
-        System.out.println(sap.length(6, 9));
+        System.out.println(sap.ancestor(7, 11));
+        System.out.println(sap.length(7, 11));
 
     }
 }
