@@ -85,21 +85,43 @@ public class SeamCarver {
     public int[] findHorizontalSeam() {
         EdgeWeightedDigraph G = new EdgeWeightedDigraph(picture.height() * picture.width() + 2);
 
-        for (int j = 0; j < picture.width() - 1; j++) {
-            for (int i = 0; i < picture.height(); i++) {
+        for (int j = 1; j < picture.width() - 2; j++) {
+            for (int i = 1; i < picture.height() - 1; i++) {
                 DirectedEdge edge = new DirectedEdge(picture.width() * i + j, picture.width() * i + j + 1, energy[i][j + 1]);
                 G.addEdge(edge);
-                if (i != 0) {
+                if (i != 1) {
                     edge = new DirectedEdge(picture.width() * i + j, (picture.width() * (i - 1)) + j + 1, energy[i - 1][j + 1]);
                     G.addEdge(edge);
                 }
-                if (i != picture.height() - 1) {
+                if (i != picture.height() - 2) {
                     edge = new DirectedEdge(picture.width() * i + j, (picture.width() * (i + 1)) + j + 1, energy[i + 1][j + 1]);
                     G.addEdge(edge);
                 }
             }
         }
 
+        for (int i = 1; i < picture.height() - 1; i++) {
+            DirectedEdge edge = new DirectedEdge(picture.height() * picture.width(), picture.width() * i + 1, energy[i][1]);
+            G.addEdge(edge);
+            edge = new DirectedEdge(picture.width() * i + picture.width() - 2, picture.height() * picture.width() + 1, 0);
+            G.addEdge(edge);
+        }
+
+        DijkstraSP sp = new DijkstraSP(G, picture.height() * picture.width());
+
+        int[] result = new int[picture.width()];
+        int i = 1;
+        for (DirectedEdge edge : sp.pathTo(picture.height() * picture.width() + 1)) {
+            result[i] = edge.to() / picture.width();
+            i++;
+            if (i == picture.width() - 1) {
+                break;
+            }
+        }
+        result[0] = result[1];
+        result[result.length - 1] = result[result.length - 2];
+        return result;
+        /*
         for (int i = 0; i < picture.height(); i++) {
             DirectedEdge edge = new DirectedEdge(picture.height() * picture.width(), picture.width() * i, energy[i][0]);
             G.addEdge(edge);
@@ -121,6 +143,7 @@ public class SeamCarver {
             }
         }
         return result;
+        */
     }
 
     public int[] findVerticalSeam() {
